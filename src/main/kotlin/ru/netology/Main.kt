@@ -3,7 +3,6 @@ package ru.netology
 fun main() {
     println("Add same messages")
     messageTo("mum", "Hi, mum! How are you?")
-    messageTo("best friend", "Hello!")
     messageTo("husband", "Hello, honey! Miss you so much)))))))))")
     messageTo("brother", "Hi, my little bunny)")
     messageTo("mum", "How are you feeling today?")
@@ -18,7 +17,7 @@ fun main() {
     println()
 
     println("Print some messages")
-    Service.getMessages(1,1,5)
+    Service.getMessages(1, 1, 5)
     println()
 
     Service.getChats()
@@ -26,7 +25,6 @@ fun main() {
 
     println("Delete some messages")
     deleteMessageById(4)
-    deleteMessageById(1555)
     deleteMessageById(3)
     println()
 
@@ -47,19 +45,19 @@ fun main() {
 
 fun messageTo(companionName: String, text: String) {
     val res = Service.sendMessage(userId = 0, companionName, text)
-    if (res!=0) println("Message successfully send. Message id = $res")
+    if (res != 0) println("Message successfully send. Message id = $res")
     else println("Message could not be sent. Message id = $res")
 }
 
 fun messageFrom(userName: String, text: String) {
     val res = Service.getIncomingMessage(userName, companionId = 0, text)
-    if (res!=0) println("Message successfully send. Message id = $res")
+    if (res != 0) println("Message successfully send. Message id = $res")
     else println("Message could not be sent. Message id = $res")
 }
 
 fun deleteMessageById(messageId: Int) {
-    if (Service.deleteMessage(messageId)) println("Message $messageId successfully deleted")
-    else println("Message could not be deleted")
+    Service.deleteMessage(messageId)
+    println("Message $messageId successfully deleted")
 }
 
 fun deleteChatById(chatId: Int) {
