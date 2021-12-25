@@ -14,12 +14,10 @@ object Service {
     private var messages: MutableList<Message> = mutableListOf()
 
     fun sendMessage(userId: Int = 0, companionName: String, text: String): Int {
-        val companionsList: List<User> = users.filter { user -> user.name == companionName }
-        if (companionsList.isEmpty()) {
-            println("Companion is not found")
-            return 0
-        }
-        val companionId = companionsList.last().userId
+        val companionId: Int = users.asSequence()
+            .filter { user -> user.name == companionName }
+            .take(1)
+            .joinToString { it.userId.toString() }.toInt()
 
         val chatListWithThisCompanion: List<Chat> = chats.filter { chat -> chat.companionId == companionId }
         return if (chatListWithThisCompanion.isNotEmpty()) {
@@ -58,20 +56,18 @@ object Service {
         }
     }
 
-    fun deleteMessage(messageId: Int): Boolean {
-        val messageList: List<Message> = messages.filter { message -> message.messageId == messageId }
-        return if (messageList.isEmpty()) {
-            println("Message is not found")
-            false
-        } else {
-            val messageListInChat: List<Message> =
-                messages.filter { message -> message.chatId == messageList.last().chatId }
-            if (messageListInChat.size == 1) {
-                chats.removeIf(fun(chat: Chat) = chat.chatId == messageList.last().chatId)
-            }
-            messages.removeIf(fun(message: Message) = message.messageId == messageId)
-            true
+    fun deleteMessage(messageId: Int) {
+        val chatId: Int = messages.asSequence()
+            .filter { message -> message.messageId == messageId }
+            .take(1)
+            .joinToString { it.chatId.toString() }.toInt()
+
+        val messageListInChat: List<Message> =
+            messages.filter { message -> message.chatId == chatId }
+        if (messageListInChat.size == 1) {
+            chats.removeIf(fun(chat: Chat) = chat.chatId == chatId)
         }
+        messages.removeIf(fun(message: Message) = message.messageId == messageId)
     }
 
     fun deleteChat(chatId: Int): Boolean {
@@ -89,52 +85,36 @@ object Service {
     fun getChats(): Boolean {
         var done = false
         for (chat in chats) {
-            val companionsList: List<User> = users.filter { user -> user.userId == chat.companionId }
+            val companionName = users.asSequence()
+                .filter { user -> user.userId == chat.companionId }
+                .take(1)
+                .joinToString { it.name }
+                .ifEmpty { "Chat is empty" }
 
             val messagesList: List<Message> =
                 messages.filter { message -> message.chatId == chat.chatId && message.unread }
 
-            if (companionsList.isNotEmpty()) {
-                val companionName = companionsList.last().name
-                println("Chat # ${chat.chatId} with $companionName. Count of unread messages = ${messagesList.size}")
-                done = true
-            }
+            println("Chat # ${chat.chatId} with $companionName. Count of unread messages = ${messagesList.size}")
+            done = true
         }
         return done
     }
 
-    fun getMessages(chatId: Int, lastMessageId: Int, countOfMessages: Int): Boolean {
-        val messageList: List<Message> = messages.filter { message -> message.chatId == chatId }
-        if (messageList.isEmpty()) {
-            println("Could not found some messages")
-            return false
-        } else {
-            val messageListAfterLastMessageId: List<Message> =
-                messageList.filter { message -> message.messageId >= lastMessageId }
-            return if (messageListAfterLastMessageId.isEmpty()) {
-                println("Could not found some messages")
-                false
-            } else {
-                var countOfPrintedMessages = 0
-                for (message in messageListAfterLastMessageId) {
-                    message.unread = false
-                    countOfPrintedMessages++
-                    println(message.text)
-                    if (countOfPrintedMessages >= countOfMessages) break
-                }
-                true
-            }
-        }
+    fun getMessages(chatId: Int, lastMessageId: Int, countOfMessages: Int) {
+        val messagesStr: String = messages.asSequence()
+            .filter { message -> message.chatId == chatId && message.messageId >= lastMessageId }
+            .take(countOfMessages)
+            .joinToString(separator = "\n") { it.text }
+            .ifEmpty { "Could not found some messages" }
+
+        println(messagesStr)
     }
 
     fun getIncomingMessage(userName: String, companionId: Int = 0, text: String): Int {
-        val usersList: List<User> = users.filter { user -> user.name == userName }
-        if (usersList.isEmpty()) {
-            println("User is not found")
-            return 0
-        }
-        val userId = usersList.last().userId
-
+        val userId = users.asSequence()
+            .filter { user -> user.name == userName }
+            .take(1)
+            .joinToString { it.userId.toString() }.toInt()
 
         val chatListWithThisCompanion: List<Chat> = chats.filter { chat -> chat.companionId == userId }
         return if (chatListWithThisCompanion.isNotEmpty()) {
